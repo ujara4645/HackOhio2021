@@ -1,0 +1,25 @@
+.address-label {
+  /* margin: 10px; margin: 0 auto; */
+  /* padding: 5px 5px; */
+}
+.other-label {
+}
+button {
+
+}
+.address-input {
+  margin-bottom: 10px;
+  width: 80%;
+  height: 30px;
+  border: solid;
+  text-align: center;
+}
+.other-input {
+  border: solid;
+  width: 20%;
+  text-align: center;
+}
+
+p {
+  color: red;
+}
