@@ -11,14 +11,15 @@ import Url.Builder
 
 type alias Location = String
 
-type alias Model = { location: Location , routes: List Route, err : String }
+type alias Model = { location: Location , routes: List Route, err : String , radius: Float }
 
 type alias Route = {start: Location, end: Location}
 
-type Msg = 
-    UpdateLocation Location 
-    | SubmitForm 
+type Msg =
+    UpdateLocation Location
+    | SubmitForm
     | GotRoutes (Result Http.Error (List Route))
+    | UpdateRadius String
 
 main : Program E.Value Model Msg
 main =
@@ -30,15 +31,24 @@ main =
         }
 
 init : E.Value -> (Model, Cmd Msg)
-init _ = ( { location = "", routes = [] , err = "" }, Cmd.none)
+init _ = ( { location = "", routes = [] , err = "" , radius = 0 }, Cmd.none)
 
 update : Msg -> Model -> (Model, Cmd Msg)
-update msg model = 
-    case msg of 
+update msg model =
+    case msg of
+        UpdateRadius newRadius ->
+            case String.toFloat newRadius of
+                Nothing ->
+                  (model, Cmd.none)
+
+                Just radius ->
+                  ({model | radius = radius}, Cmd.none)
+
+
         UpdateLocation newLocation ->
             ({model | location = newLocation}, Cmd.none)
 
-        SubmitForm -> 
+        SubmitForm ->
             (model, getRoutes model.location)
 
         GotRoutes maybeRoutes ->
@@ -51,7 +61,7 @@ update msg model =
                         Http.BadStatus status ->
                             ({model | err = "Server error. Code " ++ String.fromInt status }, Cmd.none)
 
-                        _ -> 
+                        _ ->
                             ({model | err = "Server error." }, Cmd.none)
 
 -- REGION HTTP
@@ -63,7 +73,7 @@ getRoutes location =
 routesDecoder : D.Decoder (List Route)
 routesDecoder =
     D.list routeDecoder
-        
+
 routeDecoder : D.Decoder Route
 routeDecoder =
     D.map2 Route
@@ -79,6 +89,7 @@ view model =
     Browser.Document "Tricky Treaters" [
         Html.div [] [
             Html.input [Html.Events.onInput UpdateLocation, Html.Attributes.value model.location][],
+            Html.input [Html.Events.onInput UpdateRadius, Html.Attributes.value (String.fromFloat model.radius)] [],
             Html.button [Html.Events.onClick SubmitForm] [Html.text "Submit" ]
             , Html.p [] [Html.text model.err ]
             ]
