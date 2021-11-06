@@ -20,3 +20,15 @@ def pDist(houseAcre):
     m = -1/(d_max-d_min)
     p_dist = m*(dist-d_max)
     return np.clip(p_dist,0,1)
+
+def pSafety(community_json):
+    w_murd = 10
+    w_rape = 7
+    crime_df = pd.DataFrame(community_json["response"]["result"]["package"]["item"])
+    p_safety = w_murd*(crime_df["crmcymurd"]) + w_rape*(crime_df["crmcyrape"]) + (crime_df["crmcyproc"])
+    p_safe_n = 0.5*p_safety/((w_murd+w_rape+1)*100)+0.5
+    return np.clip(p_safe_n,0,1)
+
+
+
+
