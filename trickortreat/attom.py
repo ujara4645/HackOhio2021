@@ -9,6 +9,8 @@ HEADERS = {
     "apikey": API_KEY,
 }
 
+PAGE_ARGS = {"PageSize": 1_000_000}
+
 
 def _raise_for_atomm_status(response):
     if int(response["status"]["code"]) != 0:
@@ -82,7 +84,7 @@ def area_codes(lat, long):
 def all_in_radius(lat, long, radius):
     r = requests.get(
         "https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/snapshot",
-        params={"latitude": lat, "longitude": long, "radius": radius},
+        params={"latitude": lat, "longitude": long, "radius": radius, **PAGE_ARGS},
         headers=HEADERS,
     )
     r.raise_for_status()
@@ -92,4 +94,16 @@ def all_in_radius(lat, long, radius):
 
     properties = res["property"]
 
-    return properties
+    r = requests.get(
+        "https://api.gateway.attomdata.com/propertyapi/v1.0.0/assessment/snapshot",
+        params={"latitude": lat, "longitude": long, "radius": radius, **PAGE_ARGS},
+        headers=HEADERS,
+    )
+    r.raise_for_status()
+
+    res = r.json()
+    _raise_for_atomm_status(res)
+
+    assessments = res["property"]
+
+    return properties, assessments
