@@ -168,3 +168,28 @@ def _random_graph() -> Graph:
     }
 
     return Graph(nodes, edges), Node(list(edges)[0].start, None)
+
+def rank_path(Graph, path):
+
+    edge_lookup = {}
+
+    for e in Graph.edges:
+        edge_lookup[e.start + e.end] = e.cost
+
+    ni = 0
+    tot_net_val_arr = []
+    for n in path:
+        if ni != 0:
+
+            try:
+                net_val = n.reward - edge_lookup[n_prev.id + n.id]
+
+            except:
+                net_val = n.reward - edge_lookup[n.id + n_prev.id]
+
+            tot_net_val_arr.append(net_val)
+        n_prev = n
+        ni += 1
+
+    val_p_edge = np.mean(tot_net_val_arr)
+    return val_p_edge  # Net value per edge
