@@ -39,28 +39,28 @@ def routes():
     if not distance:
         return error_json("query parameter distance missing")
 
-    # lat, long = geocoding.lat_long(location)
+    lat, long = geocoding.lat_long(location)
 
-    # logger.info(f"Got lat and long. [lat={lat}, long={long}]")
+    logger.info(f"Got lat and long. [lat={lat}, long={long}]")
 
-    # properties, assessments = attom.all_in_radius(lat, long, radius)
+    properties, assessments = attom.all_in_radius(lat, long, radius)
 
-    # logger.info(f"Got properties. [properties={len(properties)}]")
+    logger.info(f"Got properties. [properties={len(properties)}]")
 
-    # houses = [
-    #     data.House.from_property(property, assessment)
-    #     for property, assessment in zip(properties, assessments)
-    #     if data.House.is_house(property)
-    # ]
+    houses = [
+        data.House.from_property(property, assessment)
+        for property, assessment in zip(properties, assessments)
+        if data.House.is_house(property)
+    ]
 
-    # logger.info(f"Got houses. [houses={len(houses)}]")
+    logger.info(f"Got houses. [houses={len(houses)}]")
 
-    # graph = osm.make_graph(houses)
+    graph = osm.make_graph(houses)
 
-    with open("trickortreat/tests/test_graph.json", "r") as file:
-        graph_dct = json.load(file)
+    # with open("trickortreat/tests/test_graph.json", "r") as file:
+    #     graph_dct = json.load(file)
 
-    graph = osm.make_fully_connected(data.Graph.from_dict(graph_dct))
+    # graph = osm.make_fully_connected(data.Graph.from_dict(graph_dct))
 
     logger.info("Made graph.")
 

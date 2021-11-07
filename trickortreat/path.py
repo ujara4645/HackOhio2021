@@ -22,8 +22,8 @@ def _halving_initialization(vertices):
 
     if range_lat > range_long:
         mean_lat = statistics.mean(lats)
-        left_half = [vertex for vertex in vertices if vertex.lat < mean_lat]
-        right_half = [vertex for vertex in vertices if vertex.lat > mean_lat]
+        left_half = [vertex for vertex in vertices if vertex.house.lat < mean_lat]
+        right_half = [vertex for vertex in vertices if vertex.house.lat > mean_lat]
 
         left_total = sum(vertex.house.p_candy for vertex in left_half)
         right_total = sum(vertex.house.p_candy for vertex in right_half)
@@ -35,8 +35,8 @@ def _halving_initialization(vertices):
 
     else:
         mean_long = statistics.mean(longs)
-        top_half = [vertex for vertex in vertices if vertex.long > mean_long]
-        bottom_half = [vertex for vertex in vertices if vertex.long < mean_long]
+        top_half = [vertex for vertex in vertices if vertex.house.long > mean_long]
+        bottom_half = [vertex for vertex in vertices if vertex.house.long < mean_long]
 
         top_total = sum(vertex.house.p_candy for vertex in top_half)
         bottom_total = sum(vertex.house.p_candy for vertex in bottom_half)

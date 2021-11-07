@@ -42,7 +42,6 @@ def _dfs(graph: data.Graph, start: data.Vertex) -> List[data.Vertex]:
     seen = set([start])
 
     while queue:
-        print(len(queue), len(seen))
         current = queue.pop()
         seen.add(current)
         for vertex in graph.adjacent(current):
@@ -105,8 +104,6 @@ def make_fully_connected(graph: data.Graph) -> data.Graph:
     Takes a graph and identifies disconnected components. Then it iterates through all the vertices of each pair of connected components and finds the shortest pair, and adds another edge there.
     """
     components = _get_components(graph)
-
-    print(len(components))
 
     if len(components) < 2:
         logger.info("No need to connect graph!")

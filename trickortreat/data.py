@@ -83,6 +83,9 @@ class House:
         way = Way(**way_dct, nodes=nodes)
         return cls(**dct, way=way)
 
+    def __lt__(self, other):
+        return self.price < other.price
+
 
 @dataclasses.dataclass
 class Vertex:

@@ -1,6 +1,9 @@
 var apiKey = 'AIzaSyBdKi-B515pg9hGVwZZaI_hBklCvpxGO-4';
 
 var map;
+var snappedData;
+var current = 0;
+var line;
 
 function initMap() {
   var mapOptions = {
@@ -11,7 +14,27 @@ function initMap() {
 }
 
 function main() {
-  $("#button").on("click", submit);
+  $("#submit").on("click", submit);
+  $("#forward").on("click", nextPath);
+  $("#backward").on("click", prevPath);
+}
+
+function nextPath() {
+  line.setMap(null);
+  current = (current + 1) % snappedData.length;
+  setPath(snappedData[current]);
+}
+
+function prevPath() {
+  line.setMap(null);
+  current = (current - 1 + snappedData.length) % snappedData.length;
+  setPath(snappedData[current]);
+}
+
+function setPath(data) {
+  const result = processSnapToRoadResponse(data);
+  line = drawSnappedPolyline(result.coords);
+  line.setMap(map);
 }
 
 function apiHandler(result) {
@@ -19,25 +42,29 @@ function apiHandler(result) {
     alert("error: " + result['message']);
   }
 
-  console.log(result);
+  snappedData = [];
 
   for(var i = 0; i < result.paths.length; i++) {
     const pathValues = [];
     for(var j = 0; j < result.paths[i][1].length; j++) {
-      pathValues.push(result.paths[i][1][j].house.lat + "," + result.paths[i][1][j].house.long)
+      if (pathValues.length < 100) {
+        pathValues.push(result.paths[i][1][j].house.lat + "," + result.paths[i][1][j].house.long)
+      }
     }
 
     $.get('https://roads.googleapis.com/v1/snapToRoads', {
       interpolate: true,
       key: apiKey,
       path: pathValues.join('|')
-    }, function(data) {
-      console.log(data)
-      const result = processSnapToRoadResponse(data);
-      const line = drawSnappedPolyline(result.coords);
-      line.setMap(map);
+    }, function(d) {
+      snappedData.push(d)
     });
   }
+
+  setTimeout(function() { 
+    setPath(snappedData[0]);
+  }, 1000);
+
 }
 
 function processSnapToRoadResponse(data) {
@@ -57,7 +84,7 @@ function processSnapToRoadResponse(data) {
 function drawSnappedPolyline(coords) {
   const snappedPolyline = new google.maps.Polyline({
     path: coords,
-    strokeColor: '#add8e6',
+    strokeColor: '#bb0000',
     strokeWeight: 4,
     strokeOpacity: 0.9,
   });

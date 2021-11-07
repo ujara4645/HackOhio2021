@@ -5,7 +5,7 @@ python -m demo
 """
 
 
-import trickortreat.app
+import trickortreat.data
 import trickortreat.attom
 import trickortreat.geocoding
 import trickortreat.path
@@ -22,7 +22,7 @@ breakpoint()
 properties, assessments = trickortreat.attom.all_in_radius(lat, long, radius)
 
 houses = [
-    trickortreat.app.House.from_property(p, a)
+    trickortreat.data.House.from_property(p, a)
     for p, a in zip(properties, assessments)
-    if trickortreat.app.House.is_house(p)
+    if trickortreat.data.House.is_house(p)
 ]
