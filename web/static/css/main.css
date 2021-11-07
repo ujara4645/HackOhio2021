@@ -34,7 +34,12 @@ p {
 .container {
 
 }
+.topLine {
+  height: 15px;
+  margin-bottom: 15px;
+  background-color: lightgrey;
+}
 .bottomLine {
-  background-color: whitesmoke;
+  background-color: lightgrey;
   height: 5px;
 }
