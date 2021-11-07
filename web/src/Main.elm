@@ -9,9 +9,9 @@ import Html.Events
 import Http
 import Url.Builder
 
-type alias Location = {address: String , city: String , state: String , zipCode: Int}
+type alias Location = {address: String , city: String , state: String , zipCode: String}
 
-type alias Model = { location: Location , routes: List Route, err : String , radius: Float , walkDistance: Float}
+type alias Model = { location: Location , routes: List Route, err : String , radius: String , walkDistance: String}
 
 type alias Route = {start: Location, end: Location}
 
@@ -37,26 +37,16 @@ main =
         }
 
 init : E.Value -> (Model, Cmd Msg)
-init _ = ( { location = { address = "" , city = "" , state = "" , zipCode = 0 }, routes = [] , err = "" , radius = 0 , walkDistance = 0}, Cmd.none)
+init _ = ( { location = { address = "" , city = "" , state = "" , zipCode = "" }, routes = [] , err = "" , radius = "" , walkDistance = ""}, Cmd.none)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
         UpdateWalkDistance newWalkDistance ->
-            case String.toFloat newWalkDistance of
-                Nothing ->
-                  (model, Cmd.none)
-
-                Just walkDistance ->
-                  ({model | walkDistance = walkDistance}, Cmd.none)
+            ({model | walkDistance = newWalkDistance}, Cmd.none)
 
         UpdateRadius newRadius ->
-            case String.toFloat newRadius of
-                Nothing ->
-                  (model, Cmd.none)
-
-                Just radius ->
-                  ({model | radius = radius}, Cmd.none)
+            ({model | radius = newRadius}, Cmd.none)
 
         UpdateAddress newAddress ->
             let
@@ -83,15 +73,10 @@ update msg model =
             ({model | location = newLocation}, Cmd.none)
 
         UpdateZipCode newZipCode ->
-            case String.toInt newZipCode of
-              Nothing ->
-                (model, Cmd.none)
-
-              Just zipCode ->
                 let
                     oldLocation = model.location
                     newLocation =
-                        { oldLocation | zipCode = zipCode }
+                        { oldLocation | zipCode = newZipCode }
                 in
                 ({model | location = newLocation}, Cmd.none)
 
@@ -133,7 +118,7 @@ locationDecoder =
         (D.field "address" D.string)
         (D.field "city" D.string)
         (D.field "state" D.string)
-        (D.field "zipcode" D.int)
+        (D.field "zipcode" D.string)
 -- ENDREGION
 
 
@@ -170,7 +155,7 @@ view model =
                     Html.input [ Html.Events.onInput UpdateState, Html.Attributes.value model.location.state, Html.Attributes.class "address-input" ][]
                 ],
                 Html.div [Html.Attributes.class "col", Html.Attributes.class "d-flex", Html.Attributes.class "justify-content-center"] [
-                    Html.input [ Html.Events.onInput UpdateZipCode, Html.Attributes.value (String.fromInt model.location.zipCode), Html.Attributes.class "address-input" ][]
+                    Html.input [ Html.Events.onInput UpdateZipCode, Html.Attributes.value model.location.zipCode, Html.Attributes.class "address-input" ][]
                 ]
             ],
 
@@ -186,11 +171,11 @@ view model =
 
             Html.div [Html.Attributes.class "row"] [
                 Html.div [Html.Attributes.class "col", Html.Attributes.class "d-flex", Html.Attributes.class "justify-content-center"] [
-                    Html.input [Html.Events.onInput UpdateRadius, Html.Attributes.value (String.fromFloat model.radius), Html.Attributes.class "other-input"] []
+                    Html.input [Html.Events.onInput UpdateRadius, Html.Attributes.value model.radius, Html.Attributes.class "other-input"] []
                 ],
 
                 Html.div [Html.Attributes.class "col", Html.Attributes.class "d-flex", Html.Attributes.class "justify-content-center"] [
-                    Html.input [Html.Events.onInput UpdateWalkDistance, Html.Attributes.value (String.fromFloat model.walkDistance), Html.Attributes.class "other-input"] []
+                    Html.input [Html.Events.onInput UpdateWalkDistance, Html.Attributes.value model.walkDistance, Html.Attributes.class "other-input"] []
                 ]
             ],
 
