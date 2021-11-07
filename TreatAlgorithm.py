@@ -3,8 +3,8 @@ import json
 import pandas as pd
 import numpy as np
 from numpy import random
-import matplotlib.pyplot as plt
-import scipy.stats as stat
+
+
 
 
 def pCandy(housePrice):
@@ -24,11 +24,11 @@ def pDist(houseAcre):
     return np.clip(p_dist, 0, 1)
 
 
-def pSafety(community_json):
+def pSafety(crime_df):
     w_murd = 5
     w_rape = 3
     safety_factor = 1
-    crime_df = pd.DataFrame(community_json["response"]["result"]["package"]["item"])
+    #crime_df = pd.DataFrame(community_json["response"]["result"]["package"]["item"])
     p_safety = w_murd * (crime_df["crmcymurd"]) + w_rape * (crime_df["crmcyrape"]) + (crime_df["crmcyproc"])
     p_safe_n = safety_factor * (1.5 - p_safety / ((w_murd + w_rape + 1) * 100))
     return np.clip(p_safe_n, 0, 1)
