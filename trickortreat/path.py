@@ -1,8 +1,11 @@
 import random
 import dataclasses
+import math
 import string
 import statistics
 from typing import Set, Dict, Tuple, List
+
+DEG2MILES_FACTOR = 69.172
 
 
 class Graph:
@@ -99,6 +102,41 @@ def _halving_initialization(houses):
             return top_half
 
 
+def _radius(houses) -> float:
+    """
+    Gets an approximation of the radius of the group of `houses` in miles.
+    """
+    lats = [house.lat for house in houses]
+    longs = [house.long for house in houses]
+
+    range_lat = max(lats) - min(lats)
+    range_long = max(longs) - min(longs)
+
+    return deg_to_miles(statistics.mean(lats), (range_lat + range_long) / 4)
+
+
+def _total_candy(houses):
+    return sum(house.p_candy for house in houses)
+
+
+def _mean(houses):
+    lats = [house.lat for house in houses]
+    longs = [house.long for house in houses]
+    return statistics.mean(lats), statistics.mean(longs)
+
+
+def choose_starting(houses, walk_distance):
+    while _radius(houses) > walk_distance * 1.1:
+        print(len(houses), _radius(houses), _total_candy(houses))
+        houses = _halving_initialization(houses)
+
+    return _mean(houses)
+
+
+def deg_to_miles(lat, degree) -> float:
+    return degree * math.cos(math.radians(lat)) * DEG2MILES_FACTOR
+
+
 def random_search(graph: Graph, start: Node) -> List[Node]:
     """
     Start and end at `start` node.
@@ -130,10 +168,3 @@ def _random_graph() -> Graph:
     }
 
     return Graph(nodes, edges)
-
-
-if __name__ == "__main__":
-    graph = _random_graph()
-    start = Node(list(graph.edges)[0].start, None)
-    random_search(graph, start)
-    breakpoint()
