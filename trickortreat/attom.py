@@ -1,8 +1,11 @@
 import dataclasses
+import logging
 
 import requests
 
-API_KEY = "92639ad4ddf2479340d09e7c255f206f"
+API_KEY = "9f00051e150e87d1fe792b72e2271237"
+
+logger = logging.getLogger("attom")
 
 
 HEADERS = {
@@ -84,6 +87,20 @@ def area_codes(lat, long):
 
 def all_in_radius(lat, long, radius):
     r = requests.get(
+        "https://api.gateway.attomdata.com/propertyapi/v1.0.0/assessment/snapshot",
+        params={"latitude": lat, "longitude": long, "radius": radius, **PAGE_ARGS},
+        headers=HEADERS,
+    )
+    r.raise_for_status()
+
+    res = r.json()
+    _raise_for_atomm_status(res)
+
+    assessments = res["property"]
+
+    logger.info(f"Got assessments. [assessments={len(assessments)}]")
+
+    r = requests.get(
         "https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/snapshot",
         params={"latitude": lat, "longitude": long, "radius": radius, **PAGE_ARGS},
         headers=HEADERS,
@@ -95,16 +112,6 @@ def all_in_radius(lat, long, radius):
 
     properties = res["property"]
 
-    r = requests.get(
-        "https://api.gateway.attomdata.com/propertyapi/v1.0.0/assessment/snapshot",
-        params={"latitude": lat, "longitude": long, "radius": radius, **PAGE_ARGS},
-        headers=HEADERS,
-    )
-    r.raise_for_status()
-
-    res = r.json()
-    _raise_for_atomm_status(res)
-
-    assessments = res["property"]
+    logger.info(f"Got properties. [properties={len(properties)}]")
 
     return properties, assessments

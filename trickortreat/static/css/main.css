@@ -45,3 +45,10 @@ p {
 .bottomLine {
   height: 1000px;
 }
+
+#map {
+  margin-top: 16px;
+  height: 700px;
+  width: 100%;
+}
+

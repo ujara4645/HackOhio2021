@@ -40,9 +40,10 @@ def p_house(
     w_candy, w_dist, w_safe, w_bed, house_price, house_acre, community_info, n_bed
 ):
     p_safe = safety_rating(community_info)
-    p_dist = p_dist(house_acre)
-    p_candy = p_candy(house_price)
     p_bed = p_bedroom(n_bed)
-    return (w_candy * p_candy + w_dist * p_dist + w_safe * p_safe + w_bed * p_bed) / (
-        w_candy + w_dist + w_safe + w_bed
-    )
+    return (
+        w_candy * p_candy(house_price)
+        + w_dist * p_dist(house_acre)
+        + w_safe * p_safe
+        + w_bed * p_bed
+    ) / (w_candy + w_dist + w_safe + w_bed)

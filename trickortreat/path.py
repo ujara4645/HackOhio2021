@@ -4,83 +4,29 @@ import statistics
 import string
 from typing import Dict, List, Set, Tuple
 
+from . import data
+
 DEG2MILES_FACTOR = 69.172
 
 
-class Graph:
-    def __init__(self, nodes, edges):
-        self.nodes = set(nodes)
-        self.edges = set(edges)
-
-        # precomputing
-        lookup = {node.id: node for node in nodes}
-        self._adjacent: Dict[Node, Set[Tuple[Node, Edge]]] = {
-            node: set() for node in nodes
-        }
-
-        for edge in self.edges:
-            self._adjacent[lookup[edge.start]].add((lookup[edge.end], edge))
-            self._adjacent[lookup[edge.end]].add((lookup[edge.start], edge))
-
-    def adjacent(self, node):
-        if isinstance(node, str):
-            return self._adjacent[Node(node, None)]
-        else:
-            return self._adjacent[node]
-
-    def __repr__(self):
-        return f"Graph(nodes={self.nodes}, edges={self.edges})"
-
-    def __eq__(self, other):
-        return self.nodes == other.nodes and self.edges == other.edges
-
-
-class Node:
-    id: str
-    reward: float
-
-    def __init__(self, id: str, reward: float):
-        self.id = id
-        self.reward = reward
-
-    def __hash__(self):
-        return hash(self.id)
-
-    def __eq__(self, other):
-        return self.id == other.id
-
-    def __repr__(self):
-        return f"Node(id='{self.id}', reward={self.reward})"
-
-    def __lt__(self, other):
-        return self.reward < other.reward
-
-
-@dataclasses.dataclass(frozen=True)
-class Edge:
-    start: str
-    end: str
-    cost: float
-
-
-def _halving_initialization(houses):
+def _halving_initialization(vertices):
     """
     Given a list of houses, find half the area with the best probabilty of candy. Remove the other half, and repeat until the area is small.
     """
 
-    lats = [house.lat for house in houses]
-    longs = [house.long for house in houses]
+    lats = [vertex.house.lat for vertex in vertices]
+    longs = [vertex.house.long for vertex in vertices]
 
     range_lat = max(lats) - min(lats)
     range_long = max(longs) - min(longs)
 
     if range_lat > range_long:
         mean_lat = statistics.mean(lats)
-        left_half = [house for house in houses if house.lat < mean_lat]
-        right_half = [house for house in houses if house.lat > mean_lat]
+        left_half = [vertex for vertex in vertices if vertex.lat < mean_lat]
+        right_half = [vertex for vertex in vertices if vertex.lat > mean_lat]
 
-        left_total = sum(house.p_candy for house in left_half)
-        right_total = sum(house.p_candy for house in right_half)
+        left_total = sum(vertex.house.p_candy for vertex in left_half)
+        right_total = sum(vertex.house.p_candy for vertex in right_half)
 
         if right_total > left_total:
             return right_half
@@ -89,11 +35,11 @@ def _halving_initialization(houses):
 
     else:
         mean_long = statistics.mean(longs)
-        top_half = [house for house in houses if house.long > mean_long]
-        bottom_half = [house for house in houses if house.long < mean_long]
+        top_half = [vertex for vertex in vertices if vertex.long > mean_long]
+        bottom_half = [vertex for vertex in vertices if vertex.long < mean_long]
 
-        top_total = sum(house.p_candy for house in top_half)
-        bottom_total = sum(house.p_candy for house in bottom_half)
+        top_total = sum(vertex.house.p_candy for vertex in top_half)
+        bottom_total = sum(vertex.house.p_candy for vertex in bottom_half)
 
         if bottom_total > top_total:
             return bottom_half
@@ -101,12 +47,12 @@ def _halving_initialization(houses):
             return top_half
 
 
-def _radius(houses) -> float:
+def _radius(vertices) -> float:
     """
     Gets an approximation of the radius of the group of `houses` in miles.
     """
-    lats = [house.lat for house in houses]
-    longs = [house.long for house in houses]
+    lats = [vertex.house.lat for vertex in vertices]
+    longs = [vertex.house.long for vertex in vertices]
 
     range_lat = max(lats) - min(lats)
     range_long = max(longs) - min(longs)
@@ -124,19 +70,20 @@ def _mean(houses):
     return statistics.mean(lats), statistics.mean(longs)
 
 
-def choose_starting(houses, walk_distance):
-    while _radius(houses) > walk_distance * 1.1:
-        print(len(houses), _radius(houses), _total_candy(houses))
-        houses = _halving_initialization(houses)
+def choose_starting(graph: data.Graph, walk_distance: float) -> data.Vertex:
+    vertices = graph.vertices
+    while _radius(vertices) > walk_distance * 1.1:
+        # print(len(vertices), _radius(vertices), _total_candy(vertices))
+        vertices = _halving_initialization(vertices)
 
-    return _mean(houses)
+    return random.choice(vertices)
 
 
 def deg_to_miles(lat, degree) -> float:
     return degree * math.cos(math.radians(lat)) * DEG2MILES_FACTOR
 
 
-def random_search(graph: Graph, start: Node) -> List[Node]:
+def random_search(graph: data.Graph, start: data.Vertex) -> List[data.Vertex]:
     """
     Start and end at `start` node.
 
@@ -145,50 +92,39 @@ def random_search(graph: Graph, start: Node) -> List[Node]:
     current = start
     path = [current]
     while True:
-        next_node, _ = random.choice(list(graph.adjacent(current)))
+        next_node = random.choice(list(graph.adjacent(current)))
         path.append(next_node)
         current = next_node
 
-        if next_node == start:
+        if next_node == start and len(path) > 5:
             break
 
     return path
 
 
-def _random_graph() -> Graph:
-    nodes = {Node(i, random.randint(1, 20)) for i in string.ascii_lowercase}
-    edges = {
-        Edge(
-            random.choice(string.ascii_lowercase),
-            random.choice(string.ascii_lowercase),
-            random.randint(0, 5),
-        )
-        for _ in range(20)
-    }
-
-    return Graph(nodes, edges), Node(list(edges)[0].start, None)
-
-def rank_path(Graph, path):
+def score_path(graph, path):
 
     edge_lookup = {}
 
-    for e in Graph.edges:
-        edge_lookup[e.start + e.end] = e.cost
+    for edge in graph.edges:
+        edge_lookup[(edge.start, edge.end)] = edge
 
-    ni = 0
-    tot_net_val_arr = []
-    for n in path:
-        if ni != 0:
+    total_net_value_array = []
+    seen = set()
+    for start, end in zip(path, path[1:]):
+        try:
+            edge = edge_lookup[start, end]
+        except KeyError:
+            edge = edge_lookup[end, start]
 
-            try:
-                net_val = n.reward - edge_lookup[n_prev.id + n.id]
+        net_val = end.reward + edge.reward
 
-            except:
-                net_val = n.reward - edge_lookup[n.id + n_prev.id]
+        if (start, end) in seen:
+            net_val -= 1
 
-            tot_net_val_arr.append(net_val)
-        n_prev = n
-        ni += 1
+        total_net_value_array.append(net_val)
 
-    val_p_edge = np.mean(tot_net_val_arr)
-    return val_p_edge  # Net value per edge
+        seen.add((start, end))
+        seen.add((end, start))
+
+    return sum(total_net_value_array) + random.uniform(-0.1, 0.1)

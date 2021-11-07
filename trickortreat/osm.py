@@ -1,12 +1,15 @@
 import collections
 import dataclasses
 import xml.etree.ElementTree
-from typing import List, Set
+from typing import List
+import logging
 
 import quads
 import requests
 
-from . import app, attom, geocoding
+logger = logging.getLogger("osm")
+
+from . import data, geocoding
 
 
 def _data(bbox):
@@ -31,6 +34,100 @@ def _bbox(houses):
         max(house.long for house in houses),
         max(house.lat for house in houses),
     )
+
+
+def _dfs(graph: data.Graph, start: data.Vertex) -> List[data.Vertex]:
+    queue = [start]
+    vertices = [start]
+    seen = set([start])
+
+    while queue:
+        print(len(queue), len(seen))
+        current = queue.pop()
+        seen.add(current)
+        for vertex in graph.adjacent(current):
+            vertices.append(vertex)
+            if vertex not in seen:
+                queue.append(vertex)
+
+    return vertices
+
+
+def _get_components(graph: data.Graph) -> List[List[data.Vertex]]:
+    components = []
+    current_component = []
+    seen = set()
+    for vertex in graph.vertices:
+        if vertex in seen:
+            continue
+
+        current_component.append(vertex)
+        current_component.extend(_dfs(graph, vertex))
+
+        for v in current_component:
+            seen.add(v)
+
+        components.append(current_component)
+        current_component = []
+
+    return components
+
+
+def _min_dist_between_components(c1: List[data.Vertex], c2: List[data.Vertex]) -> float:
+    min_dist = float("inf")
+    best_pair = (None, None)
+
+    for v1 in c1:
+        for v2 in c2:
+            dist = (v1.house.lat - v2.house.lat) ** 2 + (
+                v1.house.long - v2.house.long
+            ) ** 2
+            if dist < min_dist:
+                min_dist = dist
+                best_pair = (v1, v2)
+
+    return min_dist, best_pair
+
+
+def _graph_with_connected_components(graph, vertex_pair) -> data.Graph:
+    v1, v2 = vertex_pair
+    edge = data.Edge([], v1, v2)
+
+    graph.edges.append(edge)
+    graph.adjacency[edge.start].append(edge.end)
+    graph.adjacency[edge.end].append(edge.start)
+
+    return graph
+
+
+def make_fully_connected(graph: data.Graph) -> data.Graph:
+    """
+    Takes a graph and identifies disconnected components. Then it iterates through all the vertices of each pair of connected components and finds the shortest pair, and adds another edge there.
+    """
+    components = _get_components(graph)
+
+    print(len(components))
+
+    if len(components) < 2:
+        logger.info("No need to connect graph!")
+        return graph
+
+    best_pair = (None, None)
+    best_dist = float("inf")
+
+    for c1 in components:
+        for c2 in components:
+            if c1 == c2:
+                continue
+
+            dist, pair = _min_dist_between_components(c1, c2)
+            if dist < best_dist:
+                best_dist = dist
+                best_pair = pair
+
+    graph = _graph_with_connected_components(graph, best_pair)
+
+    return make_fully_connected(graph)
 
 
 def make_node_lookup(root):
@@ -62,53 +159,11 @@ def is_above(node, way, loc):
     return d < 0
 
 
-@dataclasses.dataclass(frozen=True)
-class Node:
-    id: str
-    lat: float
-    long: float
-
-
-@dataclasses.dataclass
-class Way:
-    id: str
-    name: str
-    nodes: List[Node]
-
-
-@dataclasses.dataclass
-class Vertex:
-    house: app.House
-
-    def __hash__(self):
-        return hash((self.house.price, self.house.long, self.house.lat))
-
-
-@dataclasses.dataclass
-class Edge:
-    houses: List[app.House]
-    start: Vertex
-    end: Vertex
-
-
-class Graph:
-    def __init__(self, vertices, edges):
-        self.vertices = vertices
-        self.edges = edges
-        self.adjacency = collections.defaultdict(list)
-        for edge in self.edges:
-            self.adjacency[edge.start].append(edge.end)
-            self.adjacency[edge.end].append(edge.start)
-
-    def adjacent(self, v):
-        return self.adjacency[v]
-
-
-def parse_xml(raw_xml) -> List[Way]:
+def parse_xml(raw_xml) -> List[data.Way]:
     root = xml.etree.ElementTree.fromstring(raw_xml)
     node_lookup = {}
     for node in root.iter(tag="node"):
-        node_lookup[node.get("id")] = Node(
+        node_lookup[node.get("id")] = data.Node(
             node.get("id"), float(node.get("lat")), float(node.get("lon"))
         )
 
@@ -122,10 +177,9 @@ def parse_xml(raw_xml) -> List[Way]:
 
             if tag.get("k") == "name":
                 name = tag.get("v")
-                print(name)
 
         if is_highway:
-            way = Way(
+            way = data.Way(
                 way.get("id"),
                 name,
                 [node_lookup[nd.get("ref")] for nd in way.iter(tag="nd")],
@@ -173,23 +227,10 @@ def make_edge(houses, corners):
     (_, start), (_, end) = sorted(
         ((min_distance_squared_to_any(houses, other), other) for other in corners)
     )[:2]
-    return Edge(houses=houses, start=Vertex(start), end=Vertex(end))
+    return data.Edge(houses=houses, start=data.Vertex(start), end=data.Vertex(end))
 
 
-def main():
-    location = "8050 N Clippinger Drive, Cincinnati OH 45243"
-    radius = 0.5
-
-    lat, long = geocoding.lat_long(location)
-
-    properties, assessments = attom.all_in_radius(lat, long, radius)
-
-    houses = [
-        app.House.from_property(p, a)
-        for p, a in zip(properties, assessments)
-        if app.House.is_house(p)
-    ]
-
+def make_graph(houses):
     raw_xml = get_data(houses)
     ways = parse_xml(raw_xml)
 
@@ -248,9 +289,6 @@ def main():
             vertices.add(maybe_edge.start)
             vertices.add(maybe_edge.end)
 
-    graph = Graph(vertices, edges)
+    graph = data.Graph(list(vertices), list(edges))
 
-    return graph
-
-
-main()
+    return make_fully_connected(graph)
