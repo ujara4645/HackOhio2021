@@ -180,6 +180,7 @@ view model =
                     Html.label [ Html.Attributes.class "other-label" ][Html.text "Distance you want to walk (miles): "]
                 ]
             ],
+
             Html.div [Html.Attributes.class "row"] [
                 Html.div [Html.Attributes.class "col", Html.Attributes.class "d-flex", Html.Attributes.class "justify-content-center"] [
                     Html.input [Html.Events.onInput UpdateRadius, Html.Attributes.value (String.fromFloat model.radius), Html.Attributes.class "other-input"] []
@@ -189,7 +190,6 @@ view model =
                     Html.input [Html.Events.onInput UpdateWalkDistance, Html.Attributes.value (String.fromFloat model.walkDistance), Html.Attributes.class "other-input"] []
                 ]
             ],
-
 
             Html.div [Html.Attributes.class "row"] [
                 Html.div [Html.Attributes.class "col", Html.Attributes.class "d-flex", Html.Attributes.class "justify-content-center"] [
@@ -204,5 +204,7 @@ view model =
             ]
 
 
+        ],
+        Html.div [Html.Attributes.class "bottomLine"] [
         ]
     ]
