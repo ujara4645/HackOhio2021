@@ -19,7 +19,7 @@ class House:
 
     @classmethod
     def from_property(cls, property, assessment):
-        price = None
+        price = 0
         assessment = assessment["assessment"]
         if "assessed" in assessment and "assdttlvalue" in assessment["assessed"]:
             price = assessment["assessed"]["assdttlvalue"]
