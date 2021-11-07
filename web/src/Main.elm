@@ -11,7 +11,7 @@ import Url.Builder
 
 type alias Location = {address: String , city: String , state: String , zipCode: Int}
 
-type alias Model = { location: Location , routes: List Route, err : String , radius: Float , walkDistance: Int}
+type alias Model = { location: Location , routes: List Route, err : String , radius: Float , walkDistance: Float}
 
 type alias Route = {start: Location, end: Location}
 
@@ -43,7 +43,7 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
         UpdateWalkDistance newWalkDistance ->
-            case String.toInt newWalkDistance of
+            case String.toFloat newWalkDistance of
                 Nothing ->
                   (model, Cmd.none)
 
@@ -143,16 +143,16 @@ view model =
         Html.div [Html.Attributes.class "container"] [
             Html.div [Html.Attributes.class "row"] [
                 Html.div [Html.Attributes.class "col", Html.Attributes.class "d-flex", Html.Attributes.class "justify-content-center"] [
-                    Html.label [ Html.Attributes.class "address-label" ][Html.text "Your address: "]
+                    Html.label [ Html.Attributes.class "address-label" ][Html.text "Address: "]
                 ],
                 Html.div [Html.Attributes.class "col", Html.Attributes.class "d-flex", Html.Attributes.class "justify-content-center"] [
-                    Html.label [ Html.Attributes.class "address-label" ][Html.text "Your city: "]
+                    Html.label [ Html.Attributes.class "address-label" ][Html.text "City: "]
                 ],
                 Html.div [Html.Attributes.class "col", Html.Attributes.class "d-flex", Html.Attributes.class "justify-content-center"] [
-                    Html.label [ Html.Attributes.class "address-label" ][Html.text "Your state: "]
+                    Html.label [ Html.Attributes.class "address-label" ][Html.text "State: "]
                 ],
                 Html.div [Html.Attributes.class "col", Html.Attributes.class "d-flex", Html.Attributes.class "justify-content-center"] [
-                    Html.label [ Html.Attributes.class "address-label" ][Html.text "Your zip code: "]
+                    Html.label [ Html.Attributes.class "address-label" ][Html.text "Zip code: "]
                 ]
             ],
 
@@ -173,7 +173,7 @@ view model =
 
             Html.div [Html.Attributes.class "row"] [
                 Html.div [Html.Attributes.class "col", Html.Attributes.class "d-flex", Html.Attributes.class "justify-content-center"] [
-                    Html.label [ Html.Attributes.class "other-label" ][Html.text "Radius of the area you want to stay in (miles): "]
+                    Html.label [ Html.Attributes.class "other-label" ][Html.text "Radius you want to stay in (miles): "]
                 ],
 
                 Html.div [Html.Attributes.class "col", Html.Attributes.class "d-flex", Html.Attributes.class "justify-content-center"] [
@@ -186,7 +186,7 @@ view model =
                 ],
 
                 Html.div [Html.Attributes.class "col", Html.Attributes.class "d-flex", Html.Attributes.class "justify-content-center"] [
-                    Html.input [Html.Events.onInput UpdateWalkDistance, Html.Attributes.value (String.fromInt model.walkDistance), Html.Attributes.class "other-input"] []
+                    Html.input [Html.Events.onInput UpdateWalkDistance, Html.Attributes.value (String.fromFloat model.walkDistance), Html.Attributes.class "other-input"] []
                 ]
             ],
 

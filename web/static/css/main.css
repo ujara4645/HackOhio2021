@@ -5,7 +5,7 @@
 .other-label {
 }
 button {
-
+  border: solid;
 }
 .address-input {
   margin-bottom: 10px;
@@ -19,7 +19,6 @@ button {
   width: 20%;
   text-align: center;
 }
-
 p {
   color: red;
 }
