@@ -1,6 +1,7 @@
-import collections
+import random
 import dataclasses
-import heapq
+import string
+import statistics
 from typing import Set, Dict, Tuple, List
 
 
@@ -11,13 +12,25 @@ class Graph:
 
         # precomputing
         lookup = {node.id: node for node in nodes}
-        self.adjacent: Dict[Node, Set[Tuple[Node, Edge]]] = {
+        self._adjacent: Dict[Node, Set[Tuple[Node, Edge]]] = {
             node: set() for node in nodes
         }
 
         for edge in self.edges:
-            self.adjacent[lookup[edge.start]].add((lookup[edge.end], edge))
-            self.adjacent[lookup[edge.end]].add((lookup[edge.start], edge))
+            self._adjacent[lookup[edge.start]].add((lookup[edge.end], edge))
+            self._adjacent[lookup[edge.end]].add((lookup[edge.start], edge))
+
+    def adjacent(self, node):
+        if isinstance(node, str):
+            return self._adjacent[Node(node, None)]
+        else:
+            return self._adjacent[node]
+
+    def __repr__(self):
+        return f"Graph(nodes={self.nodes}, edges={self.edges})"
+
+    def __eq__(self, other):
+        return self.nodes == other.nodes and self.edges == other.edges
 
 
 class Node:
@@ -29,7 +42,10 @@ class Node:
         self.reward = reward
 
     def __hash__(self):
-        return hash(self.id + str(self.reward))
+        return hash(self.id)
+
+    def __eq__(self, other):
+        return self.id == other.id
 
     def __repr__(self):
         return f"Node(id='{self.id}', reward={self.reward})"
@@ -45,43 +61,79 @@ class Edge:
     cost: float
 
 
-def reconstruct_path(came_from: Dict, current: Node) -> List[Node]:
+def _halving_initialization(houses):
+    """
+    Given a list of houses, find half the area with the best probabilty of candy. Remove the other half, and repeat until the area is small.
+    """
+
+    lats = [house.lat for house in houses]
+    longs = [house.long for house in houses]
+
+    range_lat = max(lats) - min(lats)
+    range_long = max(longs) - min(longs)
+
+    if range_lat > range_long:
+        mean_lat = statistics.mean(lats)
+        left_half = [house for house in houses if house.lat < mean_lat]
+        right_half = [house for house in houses if house.lat > mean_lat]
+
+        left_total = sum(house.p_candy for house in left_half)
+        right_total = sum(house.p_candy for house in right_half)
+
+        if right_total > left_total:
+            return right_half
+        else:
+            return left_half
+
+    else:
+        mean_long = statistics.mean(longs)
+        top_half = [house for house in houses if house.long > mean_long]
+        bottom_half = [house for house in houses if house.long < mean_long]
+
+        top_total = sum(house.p_candy for house in top_half)
+        bottom_total = sum(house.p_candy for house in bottom_half)
+
+        if bottom_total > top_total:
+            return bottom_half
+        else:
+            return top_half
+
+
+def random_search(graph: Graph, start: Node) -> List[Node]:
+    """
+    Start and end at `start` node.
+
+    Do random search.
+    """
+    current = start
     path = [current]
-    while current in came_from:
-        current = came_from[current]
-        path.append(current)
+    while True:
+        next_node, _ = random.choice(list(graph.adjacent(current)))
+        path.append(next_node)
+        current = next_node
 
-    return list(reversed(path))
+        if next_node == start:
+            break
+
+    return path
 
 
-def heuristic(graph, node, end) -> float:
-    return 0
+def _random_graph() -> Graph:
+    nodes = {Node(i, random.randint(1, 20)) for i in string.ascii_lowercase}
+    edges = {
+        Edge(
+            random.choice(string.ascii_lowercase),
+            random.choice(string.ascii_lowercase),
+            random.randint(0, 5),
+        )
+        for _ in range(20)
+    }
+
+    return Graph(nodes, edges)
 
 
-def best_path(graph, start, end) -> Set[Node]:
-    open_set = [start]
-    came_from = {}
-
-    g = collections.defaultdict(lambda: float("inf"))
-    g[start] = 0
-
-    f = collections.defaultdict(lambda: float("inf"))
-    f[start] = heuristic(graph, start, end)
-
-    while open_set:
-        current = heapq.heappop(open_set)
-
-        if current == end and came_from:
-            return reconstruct_path(came_from, current)
-
-        for neighbor, edge in graph.adjacent[current]:
-            maybe_g_score = g[current] + edge.cost
-
-            if maybe_g_score < g[neighbor]:
-                came_from[neighbor] = current
-                g[neighbor] = maybe_g_score
-                f[neighbor] = g[neighbor] + heuristic(graph, neighbor, end)
-                heapq.heappush(open_set, neighbor)
-
+if __name__ == "__main__":
+    graph = _random_graph()
+    start = Node(list(graph.edges)[0].start, None)
+    random_search(graph, start)
     breakpoint()
-    raise ValueError("No path found!")
