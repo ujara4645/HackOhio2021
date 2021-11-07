@@ -125,10 +125,9 @@ locationDecoder =
 view : Model -> Browser.Document Msg
 view model =
     Browser.Document "Tricky Treaters" [
-        Html.div [Html.Attributes.class "topLine"] [
-        ],
 
-        Html.div [Html.Attributes.class "container"] [
+        Html.div [Html.Attributes.class "container-fluid", Html.Attributes.class "hasBackground"] [
+
             Html.div [Html.Attributes.class "row"] [
                 Html.div [Html.Attributes.class "col", Html.Attributes.class "d-flex", Html.Attributes.class "justify-content-center"] [
                     Html.label [ Html.Attributes.class "address-label" ][Html.text "Address: "]
@@ -189,11 +188,10 @@ view model =
                 Html.div [Html.Attributes.class "col", Html.Attributes.class "d-flex", Html.Attributes.class "justify-content-center"] [
                     Html.p [] [Html.text model.err ]
                 ]
+            ],
+
+            Html.div [Html.Attributes.class "bottomLine"] [
             ]
-
-
-        ],
-
-        Html.div [Html.Attributes.class "bottomLine"] [
         ]
+
     ]

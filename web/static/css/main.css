@@ -1,13 +1,16 @@
 .address-label {
-  /* margin: 10px; margin: 0 auto; */
-  /* padding: 5px 5px; */
+  margin-top: 15px;
   padding-right: 5px;
   padding-left: 5px;
+  color: whitesmoke;
 }
 
 .other-label {
   padding-right: 5px;
   padding-left: 5px;
+  color: whitesmoke;
+}
+label {
 }
 button {
   border: solid;
@@ -19,27 +22,26 @@ button {
   width: 80%;
   height: 30px;
   border: solid;
-  border-color: whitesmoke;
+  border-color: lightgrey;
   text-align: center;
 }
 .other-input {
   border: solid;
-  border-color: whitesmoke;
+  border-color: lightgrey;
   width: 20%;
   text-align: center;
 }
 p {
   color: red;
 }
-.container {
-
+.container-fluid {
 }
-.topLine {
-  height: 15px;
-  margin-bottom: 15px;
-  background-color: lightgrey;
+.hasBackground {
+  background-position:  31% 50%;
+  background-image: url(/static/images/app_background_1.png);
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 .bottomLine {
-  background-color: lightgrey;
-  height: 5px;
+  height: 1000px;
 }
