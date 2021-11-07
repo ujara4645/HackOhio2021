@@ -1,0 +1,6 @@
+debug/
+elm-stuff/
+*.swp
+
+__pycache__/
+venv/
