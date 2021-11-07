@@ -167,4 +167,4 @@ def _random_graph() -> Graph:
         for _ in range(20)
     }
 
-    return Graph(nodes, edges)
+    return Graph(nodes, edges), Node(list(edges)[0].start, None)
