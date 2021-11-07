@@ -18,8 +18,5 @@ def p_candy(price):
     p_max = 1000000
     p_min = 100000
     curve = 0.01
-    p = (
-        curve * np.exp(6.5 * np.log(2) / (p_max - p_min) * (price - p_min))
-        - curve
-    )
+    p = curve * np.exp(6.5 * np.log(2) / (p_max - p_min) * (price - p_min)) - curve
     return np.clip(p, 0, 1)

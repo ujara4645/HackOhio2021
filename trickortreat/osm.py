@@ -1,9 +1,8 @@
 import collections
-import xml.etree.ElementTree
-
 import dataclasses
-
+import xml.etree.ElementTree
 from typing import List, Set
+
 import quads
 import requests
 
@@ -192,8 +191,6 @@ def main():
     ]
 
     raw_xml = get_data(houses)
-    with open("data.osm", "w") as file:
-        file.write(raw_xml)
     ways = parse_xml(raw_xml)
 
     way_lookup = collections.defaultdict(list)

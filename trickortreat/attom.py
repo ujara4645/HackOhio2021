@@ -1,5 +1,6 @@
-import requests
 import dataclasses
+
+import requests
 
 API_KEY = "92639ad4ddf2479340d09e7c255f206f"
 

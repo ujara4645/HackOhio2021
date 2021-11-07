@@ -15,6 +15,10 @@ radius = 0.2
 
 lat, long = trickortreat.geocoding.lat_long(location)
 
+areacodes = trickortreat.attom.area_codes(lat, long)
+
+breakpoint()
+
 properties, assessments = trickortreat.attom.all_in_radius(lat, long, radius)
 
 houses = [
@@ -22,5 +26,3 @@ houses = [
     for p, a in zip(properties, assessments)
     if trickortreat.app.House.is_house(p)
 ]
-
-print(trickortreat.path.choose_starting(houses, 0.05))

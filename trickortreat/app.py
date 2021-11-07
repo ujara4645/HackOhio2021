@@ -1,12 +1,12 @@
 import dataclasses
+import xml.etree.ElementTree
 
-import requests
 from flask import Flask, request
 
-from . import geocoding, attom, modeling
+from . import attom, geocoding, modeling
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class House:
     price: float
     lat: float
@@ -15,7 +15,11 @@ class House:
     bedrooms: int
     address: str
     p_candy: float
-    codes: attom.AreaCodes
+    node: xml.etree.ElementTree.ElementTree = None
+    way: xml.etree.ElementTree.ElementTree = None
+    above: bool = False
+    codes: attom.AreaCodes = None
+    corner: bool = False
 
     @classmethod
     def from_property(cls, property, assessment):
@@ -46,9 +50,11 @@ class House:
         ):
             beds = property["building"]["rooms"]["beds"]
 
+        address = property["address"]["oneLine"]
+
         p_candy = modeling.p_candy(price)
 
-        return cls(price, lat, long, acreage, beds, "", p_candy, None)
+        return cls(price, lat, long, acreage, beds, address, p_candy)
 
     @staticmethod
     def is_house(property):

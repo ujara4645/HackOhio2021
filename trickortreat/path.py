@@ -1,9 +1,8 @@
-import random
-import dataclasses
 import math
-import string
+import random
 import statistics
-from typing import Set, Dict, Tuple, List
+import string
+from typing import Dict, List, Set, Tuple
 
 DEG2MILES_FACTOR = 69.172
 
